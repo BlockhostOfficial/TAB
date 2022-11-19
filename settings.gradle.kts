@@ -14,6 +14,7 @@ dependencyResolutionManagement {
         maven("https://repo.opencollab.dev/maven-snapshots/") // Floodgate
         maven("https://repo.purpurmc.org/snapshots") // Purpur, Vault
         maven("https://repo.papermc.io/repository/maven-public/") // Velocity
+        maven("https://repo.clojars.org/") // MultiLib
     }
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
 }

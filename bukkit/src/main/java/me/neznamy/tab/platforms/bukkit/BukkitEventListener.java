@@ -1,6 +1,12 @@
 package me.neznamy.tab.platforms.bukkit;
 
+import com.github.puregero.multilib.MultiLib;
 import me.neznamy.tab.api.TabAPI;
+import net.kyori.adventure.pointer.Pointer;
+import org.apache.commons.lang.SerializationUtils;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -8,6 +14,8 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+
+import java.io.Serializable;
 
 /**
  * The core for bukkit forwarding events into all enabled features
@@ -37,6 +45,7 @@ public class BukkitEventListener implements Listener {
     public void onQuit(PlayerQuitEvent e){
         if (TabAPI.getInstance().isPluginDisabled()) return;
         TabAPI.getInstance().getThreadManager().runTask(() -> TabAPI.getInstance().getFeatureManager().onQuit(TabAPI.getInstance().getPlayer(e.getPlayer().getUniqueId())));
+        MultiLib.notify("tab-player-quit", e.getPlayer().getUniqueId().toString());
     }
     
     /**
@@ -50,6 +59,7 @@ public class BukkitEventListener implements Listener {
         if (TabAPI.getInstance().isPluginDisabled()) return;
         TabAPI.getInstance().getThreadManager().runTask(() ->
                 TabAPI.getInstance().getFeatureManager().onJoin(new BukkitTabPlayer(e.getPlayer(), platform.getProtocolVersion(e.getPlayer()))));
+        MultiLib.notify("tab-player-join", e.getPlayer().getUniqueId() + ":" + platform.getProtocolVersion(e.getPlayer()));
     }
 
     /**
@@ -63,6 +73,7 @@ public class BukkitEventListener implements Listener {
         if (TabAPI.getInstance().isPluginDisabled()) return;
         TabAPI.getInstance().getThreadManager().runTask(() ->
                 TabAPI.getInstance().getFeatureManager().onWorldChange(e.getPlayer().getUniqueId(), e.getPlayer().getWorld().getName()));
+        MultiLib.notify("tab-player-world-change", e.getPlayer().getUniqueId() + ":" + e.getPlayer().getWorld().getName());
     }
 
     /**

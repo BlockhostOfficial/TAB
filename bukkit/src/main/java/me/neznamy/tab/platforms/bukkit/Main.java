@@ -3,8 +3,10 @@ package me.neznamy.tab.platforms.bukkit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 
+import com.github.puregero.multilib.MultiLib;
 import me.neznamy.tab.api.TabAPI;
 import me.neznamy.tab.platforms.bukkit.nms.*;
 import org.bstats.bukkit.Metrics;
@@ -61,6 +63,7 @@ public class Main extends JavaPlugin {
         TABCommand command = new TABCommand();
         cmd.setExecutor(command);
         cmd.setTabCompleter(command);
+        setupMultiLibChannels();
     }
 
     @Override
@@ -111,6 +114,31 @@ public class Main extends JavaPlugin {
             }
         }
         return false;
+    }
+
+    private void setupMultiLibChannels() {
+        MultiLib.onString(this, "tab-player-join", (data) -> {
+            String[] parts = data.split(":");
+            TabAPI.getInstance().getThreadManager().runTaskLater(1000, () -> {
+                Player p = getPlayerMultiLib(UUID.fromString(parts[0]));
+                TabAPI.getInstance().getFeatureManager().onJoin(new BukkitTabPlayer(p, Integer.parseInt(parts[1])));
+            });
+        });
+        MultiLib.onString(this, "tab-player-quit", (data) -> {
+            TabAPI.getInstance().getThreadManager().runTask(() -> TabAPI.getInstance().getFeatureManager().onQuit(TabAPI.getInstance().getPlayer(UUID.fromString(data))));
+        });
+        MultiLib.onString(this, "tab-player-world-change", (data) -> {
+            String[] parts = data.split(":");
+            TabAPI.getInstance().getThreadManager().runTask(() ->
+                    TabAPI.getInstance().getFeatureManager().onWorldChange(UUID.fromString(parts[0]), parts[1]));
+        });
+    }
+
+    private Player getPlayerMultiLib(UUID uuid) {
+        for (Player all : MultiLib.getAllOnlinePlayers()) {
+            if (all.getUniqueId().equals(uuid)) return all;
+        }
+        return null;
     }
 
     /**

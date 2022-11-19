@@ -33,6 +33,7 @@ bstats = "3.0.0"
 essentials = "2.19.7"
 premiumVanish = "2.7.11-2"
 redisBungee = "0.7.3"
+multilib = "1.1.8"
 
 # Plugins
 indra = "2.1.1"
@@ -74,6 +75,7 @@ authlib = { group = "com.mojang", name = "authlib", version.ref = "authlib" }
 essentials = { group = "net.essentialsx", name = "EssentialsX", version.ref = "essentials" }
 premiumVanish = { group = "com.github.MyzelYam", name = "PremiumVanishAPI", version.ref = "premiumVanish" }
 redisBungee = { group = "com.github.limework.redisbungee", name = "RedisBungee-Bungee", version.ref = "redisBungee" }
+multilib = { group = "com.github.puregero", name = "multilib", version.ref = "multilib"}
 
 # Metrics
 bstats-bukkit = { group = "org.bstats", name = "bstats-bukkit", version.ref = "bstats" }
