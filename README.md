@@ -1,5 +1,9 @@
 # MultiPaper-compatible TAB
-Makes the %online% placeholder multiserver-compatible.
+
+- Makes the %online% placeholder multiserver-compatible.
+- For more placeholders use https://api.extendedclip.com/expansions/multipaperplaceholders/
+- Fixes prefixes and suffixes of a player on server A not being visible on the server B (across servers)
+
 # About
 TAB aims to be a superior all-in-one minecraft plugin for displaying information that outperforms all 
 similar plugins in terms of features, performance, compatibility and support.  
