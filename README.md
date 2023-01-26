@@ -1,4 +1,4 @@
-# MultiPaper-compatible TAB
+# MultiPaper-compatible TAB 
 
 - Makes the %online% placeholder multiserver-compatible.
 - For more placeholders use https://api.extendedclip.com/expansions/multipaperplaceholders/
