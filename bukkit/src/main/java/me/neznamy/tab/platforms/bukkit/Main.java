@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
 
 import com.github.puregero.multilib.MultiLib;
 import me.neznamy.tab.api.ProtocolVersion;
@@ -23,10 +22,6 @@ import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Main class for Bukkit platform
@@ -94,7 +89,6 @@ public class Main extends JavaPlugin {
         String serverPackage = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
         try {
             long time = System.currentTimeMillis();
-            int minorVersion = Integer.parseInt(serverPackage.split("_")[1]);
             NMSStorage.setInstance(getNMSLoader());
             if (supportedVersions.contains(serverPackage)) {
                 Bukkit.getConsoleSender().sendMessage(EnumChatFormat.color("[TAB] Loaded NMS hook in " + (System.currentTimeMillis()-time) + "ms"));
