@@ -18,10 +18,10 @@ import me.neznamy.tab.shared.features.sorting.Sorting;
 
 public class NameTag extends TabFeature implements TeamManager {
 
-    private final boolean invisibleNameTags = TAB.getInstance().getConfiguration().getConfig().getBoolean("scoreboard-teams.invisible-nametags", false);
+    protected final boolean invisibleNameTags = TAB.getInstance().getConfiguration().getConfig().getBoolean("scoreboard-teams.invisible-nametags", false);
     private final boolean collisionRule = TAB.getInstance().getConfiguration().getConfig().getBoolean("scoreboard-teams.enable-collision", true);
     private final boolean canSeeFriendlyInvisibles = TAB.getInstance().getConfig().getBoolean("scoreboard-teams.can-see-friendly-invisibles", false);
-    private final Sorting sorting = new Sorting(this);
+    private final Sorting sorting = (Sorting) TAB.getInstance().getFeatureManager().getFeature(TabConstants.Feature.SORTING);
     private final CollisionManager collisionManager = new CollisionManager(this, collisionRule);
 
     private final Set<TabPlayer> hiddenNameTag = Collections.newSetFromMap(new WeakHashMap<>());
@@ -48,7 +48,6 @@ public class NameTag extends TabFeature implements TeamManager {
     public void load(){
         TabExpansion expansion = TAB.getInstance().getPlaceholderManager().getTabExpansion();
         for (TabPlayer all : TAB.getInstance().getOnlinePlayers()) {
-            sorting.constructTeamNames(all);
             updateProperties(all);
             hiddenNameTagFor.put(all, new ArrayList<>());
             if (isDisabled(all.getServer(), all.getWorld())) {
@@ -63,7 +62,7 @@ public class NameTag extends TabFeature implements TeamManager {
     @Override
     public void unload() {
         for (TabPlayer p : TAB.getInstance().getOnlinePlayers()) {
-            if (!isDisabledPlayer(p)) unregisterTeam(p);
+            if (!isDisabledPlayer(p)) unregisterTeam(p, sorting.getShortTeamName(p));
         }
     }
 
@@ -145,7 +144,7 @@ public class NameTag extends TabFeature implements TeamManager {
         }
         boolean changed = updateProperties(p);
         if (disabledNow && !disabledBefore) {
-            unregisterTeam(p);
+            unregisterTeam(p, sorting.getShortTeamName(p));
         } else if (!disabledNow && disabledBefore) {
             registerTeam(p);
         } else if (changed) {
@@ -194,7 +193,7 @@ public class NameTag extends TabFeature implements TeamManager {
     @Override
     public void pauseTeamHandling(TabPlayer player) {
         if (teamHandlingPaused.contains(player)) return;
-        if (!isDisabledPlayer(player)) unregisterTeam(player);
+        if (!isDisabledPlayer(player)) unregisterTeam(player, sorting.getShortTeamName(player));
         teamHandlingPaused.add(player); //adding after, so unregisterTeam method runs
     }
 
@@ -214,7 +213,7 @@ public class NameTag extends TabFeature implements TeamManager {
     public void forceTeamName(TabPlayer player, String name) {
         if (Objects.equals(forcedTeamName.get(player), name)) return;
         if (name != null && name.length() > 16) throw new IllegalArgumentException("Team name cannot be more than 16 characters long.");
-        unregisterTeam(player);
+        unregisterTeam(player, sorting.getShortTeamName(player));
         forcedTeamName.put(player, name);
         registerTeam(player);
         if (name != null) sorting.setTeamNameNote(player, "Set using API");
@@ -258,10 +257,10 @@ public class NameTag extends TabFeature implements TeamManager {
         viewer.sendCustomPacket(new PacketPlayOutScoreboardTeam(sorting.getShortTeamName(p), currentPrefix, currentSuffix, translate(visible), translate(collisionManager.getCollision(p)), getTeamOptions()), TabConstants.PacketCategory.NAMETAGS_TEAM_UPDATE);
     }
 
-    public void unregisterTeam(TabPlayer p) {
+    public void unregisterTeam(TabPlayer p, String teamName) {
         if (hasTeamHandlingPaused(p) || sorting.getShortTeamName(p) == null) return;
         for (TabPlayer viewer : TAB.getInstance().getOnlinePlayers()) {
-            viewer.sendCustomPacket(new PacketPlayOutScoreboardTeam(sorting.getShortTeamName(p)), TabConstants.PacketCategory.NAMETAGS_TEAM_UNREGISTER);
+            viewer.sendCustomPacket(new PacketPlayOutScoreboardTeam(teamName), TabConstants.PacketCategory.NAMETAGS_TEAM_UNREGISTER);
         }
     }
 
@@ -280,13 +279,12 @@ public class NameTag extends TabFeature implements TeamManager {
     }
 
     private void updateTeam(TabPlayer p) {
-        if (sorting.getShortTeamName(p) == null) return; //player not loaded yet
         String oldName = getSorting().getShortTeamName(p);
         getSorting().constructTeamNames(p);
         if (oldName.equals(sorting.getShortTeamName(p))) {
             updateTeamData(p);
         } else {
-            unregisterTeam(p);
+            unregisterTeam(p, oldName);
             LayoutManager layout = (LayoutManager) TAB.getInstance().getFeatureManager().getFeature(TabConstants.Feature.LAYOUT);
             if (layout != null) layout.updateTeamName(p, sorting.getFullTeamName(p));
             registerTeam(p);

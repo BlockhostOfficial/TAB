@@ -21,13 +21,14 @@ import java.util.List;
 public class Configs {
 
     //config.yml file
-    private final ConfigurationFile config = new YamlConfigurationFile(getClass().getClassLoader().getResourceAsStream(TAB.getInstance().getPlatform().getConfigName()),
+    private final ConfigurationFile config = new YamlConfigurationFile(getClass().getClassLoader().getResourceAsStream("config.yml"),
             new File(TAB.getInstance().getDataFolder(), "config.yml"));
 
     private final boolean bukkitPermissions = TAB.getInstance().getServerVersion() == ProtocolVersion.PROXY && config.getBoolean("use-bukkit-permissions-manager", false);
     private final boolean debugMode = config.getBoolean("debug", false);
     private final boolean removeGhostPlayers = getSecretOption("remove-ghost-players", false);
     private final boolean pipelineInjection = getSecretOption("pipeline-injection", true) && TAB.getInstance().getServerVersion().getMinorVersion() >= 8;
+    private final String serverName = getSecretOption("server-name", "N/A");
 
     //animations.yml file
     private final ConfigurationFile animation = new YamlConfigurationFile(getClass().getClassLoader().getResourceAsStream("animations.yml"),
@@ -168,5 +169,9 @@ public class Configs {
 
     public boolean isDebugMode() {
         return debugMode;
+    }
+
+    public String getServerName() {
+        return serverName;
     }
 }

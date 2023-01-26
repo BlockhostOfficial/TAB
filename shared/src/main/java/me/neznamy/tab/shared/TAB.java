@@ -151,8 +151,8 @@ public class TAB extends TabAPI {
             long time = System.currentTimeMillis();
             errorManager = new ErrorManager();
             cpu = new CpuManager();
-            featureManager = new FeatureManagerImpl();
             configuration = new Configs();
+            featureManager = new FeatureManagerImpl();
             featureManager.registerFeature(TabConstants.Feature.PLACEHOLDER_MANAGER, new PlaceholderManagerImpl());
             featureManager.registerFeature(TabConstants.Feature.GROUP_MANAGER, new GroupManager(platform.detectPermissionPlugin()));
             platform.loadFeatures();
@@ -161,7 +161,6 @@ public class TAB extends TabAPI {
             for (TabPlayer p : players) ((ITabPlayer)p).markAsLoaded(false);
             cpu.enable();
             if (eventBus != null) eventBus.fire(TabLoadEventImpl.getInstance());
-            platform.callLoadEvent();
             disabled = false;
             sendConsoleMessage("&aEnabled in " + (System.currentTimeMillis()-time) + "ms", true);
             return configuration.getMessages().getReloadSuccess();
@@ -233,7 +232,7 @@ public class TAB extends TabAPI {
         if (serverVersion.getMinorVersion() >= 8 && configuration.getLayout().getBoolean("enabled", false)) {
             if (getTeamManager() == null) {
                 //sorting is disabled, but layout needs team names
-                featureManager.registerFeature(TabConstants.Feature.SORTING, new Sorting(null));
+                featureManager.registerFeature(TabConstants.Feature.SORTING, new Sorting());
             }
             featureManager.registerFeature(TabConstants.Feature.LAYOUT, new LayoutManager());
         }

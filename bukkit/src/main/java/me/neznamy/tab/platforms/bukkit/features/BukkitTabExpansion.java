@@ -6,6 +6,7 @@ import me.neznamy.tab.api.TabAPI;
 import me.neznamy.tab.api.TabConstants;
 import me.neznamy.tab.api.TabFeature;
 import me.neznamy.tab.api.TabPlayer;
+import me.neznamy.tab.shared.TAB;
 import me.neznamy.tab.shared.features.TabExpansion;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -45,9 +46,16 @@ public class BukkitTabExpansion extends PlaceholderExpansion implements TabExpan
     @Override
     public String onPlaceholderRequest(Player player, @NotNull String identifier){
         if (identifier.startsWith("replace_")) {
-            String placeholder = "%" + identifier.substring(8) + "%";
-            String output = PlaceholderAPI.setPlaceholders(player, placeholder);
-            return TabAPI.getInstance().getPlaceholderManager().findReplacement(placeholder, output);
+            String text = "%" + identifier.substring(8) + "%";
+            String textBefore;
+            do {
+                textBefore = text;
+                for (String placeholder : TAB.getInstance().getPlaceholderManager().detectPlaceholders(text)) {
+                    text = text.replace(placeholder, TabAPI.getInstance().getPlaceholderManager().findReplacement(placeholder,
+                            PlaceholderAPI.setPlaceholders(player, placeholder)));
+                }
+            } while (!textBefore.equals(text));
+            return text;
         }
         if (identifier.startsWith("placeholder_")) {
             TabAPI.getInstance().getPlaceholderManager().addUsedPlaceholder("%" + identifier.substring(12) + "%", (TabFeature) TabAPI.getInstance().getPlaceholderManager());

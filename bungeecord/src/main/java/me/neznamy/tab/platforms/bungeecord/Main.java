@@ -26,7 +26,7 @@ public class Main extends Plugin {
     @Override
     public void onEnable(){
         if (!isVersionSupported()) {
-            getLogger().info(EnumChatFormat.color("&cThe plugin requires BungeeCord build #1637 and up to work. Get it at https://ci.md-5.net/job/BungeeCord/"));
+            getLogger().info(EnumChatFormat.color("&cThe plugin requires BungeeCord build #1671 and up (or an equivalent fork) to work."));
             return;
         }
         BungeePlatform platform = new BungeePlatform();
@@ -47,7 +47,7 @@ public class Main extends Plugin {
      */
     private boolean isVersionSupported() {
         try {
-            Class.forName("net.md_5.bungee.protocol.Property");
+            Class.forName("net.md_5.bungee.protocol.packet.PlayerListItemUpdate");
             return true;
         } catch (ClassNotFoundException e) {
             return false;

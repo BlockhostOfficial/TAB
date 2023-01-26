@@ -16,7 +16,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionEffectType;
 
-import com.earth2me.essentials.Essentials;
 import com.mojang.authlib.GameProfile;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.legacy.bossbar.BossColor;
@@ -26,7 +25,7 @@ import com.viaversion.viaversion.api.legacy.bossbar.BossStyle;
 import io.netty.channel.Channel;
 import me.neznamy.tab.api.chat.rgb.RGBUtils;
 import me.neznamy.tab.api.protocol.PacketPlayOutBoss;
-import me.neznamy.tab.platforms.bukkit.nms.NMSStorage;
+import me.neznamy.tab.platforms.bukkit.nms.storage.NMSStorage;
 import me.neznamy.tab.shared.ITabPlayer;
 import me.neznamy.tab.shared.TAB;
 
@@ -56,7 +55,7 @@ public class BukkitTabPlayer extends ITabPlayer {
      *          Player's protocol network id
      */
     public BukkitTabPlayer(Player p, int protocolVersion){
-        super(p, p.getUniqueId(), p.getName(), "N/A", p.getWorld().getName(), protocolVersion, true);
+        super(p, p.getUniqueId(), p.getName(), TAB.getInstance().getConfiguration().getServerName(), p.getWorld().getName(), protocolVersion, true);
         try {
             handle = NMSStorage.getInstance().getHandle.invoke(player);
             playerConnection = NMSStorage.getInstance().PLAYER_CONNECTION.get(handle);
@@ -277,10 +276,7 @@ public class BukkitTabPlayer extends ITabPlayer {
 
     @Override
     public boolean isVanished() {
-        Essentials essentials = ((BukkitPlatform)TAB.getInstance().getPlatform()).getEssentials();
-        if (essentials != null && essentials.getUser(getUniqueId()).isVanished()) return true;
-        List<MetadataValue> metadata = getPlayer().getMetadata("vanished");
-        return !metadata.isEmpty() && metadata.get(0).asBoolean();
+        return getPlayer().getMetadata("vanished").stream().anyMatch(MetadataValue::asBoolean);
     }
 
     @SuppressWarnings("deprecation")
@@ -293,11 +289,32 @@ public class BukkitTabPlayer extends ITabPlayer {
     public Object getProfilePublicKey() {
         if (NMSStorage.getInstance().getMinorVersion() < 19) return null;
         try {
-            Object key = NMSStorage.getInstance().EntityHuman_ProfilePublicKey.get(handle);
-            if (key == null) return null;
-            return NMSStorage.getInstance().ProfilePublicKey_getRecord.invoke(key);
+            if (NMSStorage.getInstance().RemoteChatSession != null) {
+                //1.19.3+
+                Object session = NMSStorage.getInstance().EntityPlayer_RemoteChatSession.get(handle);
+                if (session == null) return null;
+                Object key = NMSStorage.getInstance().RemoteChatSession_getProfilePublicKey.invoke(session);
+                return NMSStorage.getInstance().ProfilePublicKey_getRecord.invoke(key);
+            } else {
+                Object key = NMSStorage.getInstance().EntityHuman_ProfilePublicKey.get(handle);
+                if (key == null) return null;
+                return NMSStorage.getInstance().ProfilePublicKey_getRecord.invoke(key);
+            }
         } catch (ReflectiveOperationException e) {
             TAB.getInstance().getErrorManager().printError("Failed to get profile key of " + getName(), e);
+            return null;
+        }
+    }
+
+    @Override
+    public UUID getChatSessionId() {
+        if (NMSStorage.getInstance().RemoteChatSession != null) return null;
+        try {
+            Object session = NMSStorage.getInstance().EntityPlayer_RemoteChatSession.get(handle);
+            if (session == null) return null;
+            return (UUID) NMSStorage.getInstance().RemoteChatSession_getSessionId.invoke(session);
+        } catch (ReflectiveOperationException e) {
+            TAB.getInstance().getErrorManager().printError("Failed to get chat session of " + getName(), e);
             return null;
         }
     }

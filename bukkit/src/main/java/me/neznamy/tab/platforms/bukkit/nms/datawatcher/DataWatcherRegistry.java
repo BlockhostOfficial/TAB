@@ -1,6 +1,6 @@
 package me.neznamy.tab.platforms.bukkit.nms.datawatcher;
 
-import me.neznamy.tab.platforms.bukkit.nms.NMSStorage;
+import me.neznamy.tab.platforms.bukkit.nms.storage.NMSStorage;
 
 import java.util.Map;
 
@@ -36,8 +36,13 @@ public class DataWatcherRegistry {
                 registryFloat = fields.get("c");
                 registryString = fields.get("d");
                 if (nms.getMinorVersion() >= 13) {
-                    registryOptionalIChatBaseComponent = fields.get("f");
-                    registryBoolean = fields.get("i");
+                    if (nms.is1_19_3Plus()) {
+                        registryOptionalIChatBaseComponent = fields.get("g");
+                        registryBoolean = fields.get("j");
+                    } else {
+                        registryOptionalIChatBaseComponent = fields.get("f");
+                        registryBoolean = fields.get("i");
+                    }
                 } else {
                     registryBoolean = fields.get("h");
                 }

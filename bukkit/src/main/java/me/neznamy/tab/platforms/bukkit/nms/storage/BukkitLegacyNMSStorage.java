@@ -1,13 +1,12 @@
-package me.neznamy.tab.platforms.bukkit.nms;
-
-import me.neznamy.tab.platforms.bukkit.Main;
+package me.neznamy.tab.platforms.bukkit.nms.storage;
 
 import java.util.Arrays;
 
 /**
- * NMS loader for Minecraft 1.16.5 and lower using old NMS class structure.
+ * NMS loader for Minecraft 1.5.2 - 1.16.5 using Bukkit mapping.
  */
-public class LegacyNMSStorage extends NMSStorage {
+@SuppressWarnings({"unchecked", "rawtypes"})
+public class BukkitLegacyNMSStorage extends NMSStorage {
 
     /**
      * Creates new instance, initializes required NMS classes and fields
@@ -15,7 +14,7 @@ public class LegacyNMSStorage extends NMSStorage {
      * @throws  ReflectiveOperationException
      *          If any class, field or method fails to load
      */
-    public LegacyNMSStorage() throws ReflectiveOperationException {
+    public BukkitLegacyNMSStorage() throws ReflectiveOperationException {
     }
 
     /**
@@ -47,44 +46,33 @@ public class LegacyNMSStorage extends NMSStorage {
      * @throws  ClassNotFoundException
      *          if class was not found
      */
-    private Class<?> getLegacyClass(String name) throws ClassNotFoundException {
-        try {
-            return Class.forName("net.minecraft.server." + serverPackage + "." + name);
-        } catch (ClassNotFoundException | NullPointerException e) {
-            try {
-                //modded server?
-                Class<?> clazz = Main.class.getClassLoader().loadClass("net.minecraft.server." + serverPackage + "." + name);
-                if (clazz != null) return clazz;
-            } catch (NullPointerException ignored) {}
-            throw new ClassNotFoundException(name);
-        }
+    public Class<?> getLegacyClass(String name) throws ClassNotFoundException {
+        return Class.forName("net.minecraft.server." + serverPackage + "." + name);
     }
 
     @Override
     public void loadNamedFieldsAndMethods() throws ReflectiveOperationException {
-        PING = getField(EntityPlayer, "ping", "field_71138_i"); // {Bukkit, Thermos}
-        ScoreboardScore_setScore = getMethod(ScoreboardScore, new String[]{"setScore", "func_96647_c"}, int.class); // {Bukkit, Thermos}
-        ScoreboardTeam_setAllowFriendlyFire = getMethod(ScoreboardTeam,
-                new String[]{"setAllowFriendlyFire", "func_96660_a"}, boolean.class); // {Bukkit, Thermos}
-        ScoreboardTeam_setCanSeeFriendlyInvisibles = getMethod(ScoreboardTeam,
-                new String[]{"setCanSeeFriendlyInvisibles", "func_98300_b"}, boolean.class); // {Bukkit, Thermos}
+        PING = getField(EntityPlayer, "ping");
+        ScoreboardScore_setScore = getMethod(ScoreboardScore, new String[] {"setScore", "c"}, int.class); // 1.5.1+, 1.5
+        ScoreboardTeam_setAllowFriendlyFire = getMethod(ScoreboardTeam, new String[] {"setAllowFriendlyFire", "a"}, boolean.class); // 1.5.1+, 1.5
+        ScoreboardTeam_setCanSeeFriendlyInvisibles = getMethod(ScoreboardTeam, new String[] {"setCanSeeFriendlyInvisibles", "b"}, boolean.class); // 1.5.1+, 1.5
         if (minorVersion >= 7) {
-            ChatSerializer_DESERIALIZE = getMethod(ChatSerializer, new String[]{"a", "func_150699_a"}, String.class); // {Bukkit, Thermos}
+            ChatSerializer_DESERIALIZE = ChatSerializer.getMethod("a", String.class);
         }
         if (minorVersion >= 8) {
             ScoreboardTeam_setNameTagVisibility = getMethod(ScoreboardTeam, new String[] {"setNameTagVisibility", "a"}, EnumNameTagVisibility); // {1.8.1+, 1.8}
         }
         if (minorVersion >= 9) {
-            DataWatcher_REGISTER = getMethod(DataWatcher, "register", DataWatcherObject, Object.class);
+            DataWatcher_REGISTER = DataWatcher.getMethod("register", DataWatcherObject, Object.class);
         } else {
-            DataWatcher_REGISTER = getMethod(DataWatcher, new String[]{"a", "func_75682_a"}, int.class, Object.class); // {Bukkit, Thermos}
+            DataWatcher_REGISTER = DataWatcher.getMethod("a", int.class, Object.class);
         }
         if (minorVersion >= 13) {
-            ScoreboardTeam_setPrefix = getMethod(ScoreboardTeam, "setPrefix", IChatBaseComponent);
-            ScoreboardTeam_setSuffix = getMethod(ScoreboardTeam, "setSuffix", IChatBaseComponent);
+            ScoreboardTeam_setPrefix = ScoreboardTeam.getMethod("setPrefix", IChatBaseComponent);
+            ScoreboardTeam_setSuffix = ScoreboardTeam.getMethod("setSuffix", IChatBaseComponent);
         } else {
-            ScoreboardTeam_setPrefix = getMethod(ScoreboardTeam, new String[]{"setPrefix", "func_96666_b"}, String.class); // {Bukkit, Thermos}
-            ScoreboardTeam_setSuffix = getMethod(ScoreboardTeam, new String[]{"setSuffix", "func_96662_c"}, String.class); // {Bukkit, Thermos}
+            ScoreboardTeam_setPrefix = getMethod(ScoreboardTeam, new String[] {"setPrefix", "b"}, String.class); // 1.5.1+, 1.5
+            ScoreboardTeam_setSuffix = getMethod(ScoreboardTeam, new String[] {"setSuffix", "c"}, String.class); // 1.5.1+, 1.5
         }
     }
 
@@ -93,7 +81,7 @@ public class LegacyNMSStorage extends NMSStorage {
         EntityHuman = getLegacyClass("EntityHuman");
         World = getLegacyClass("World");
         Packet = getLegacyClass("Packet");
-        EnumChatFormat = getLegacyClass("EnumChatFormat");
+        EnumChatFormat = (Class<Enum>) getLegacyClass("EnumChatFormat");
         EntityPlayer = getLegacyClass("EntityPlayer");
         Entity = getLegacyClass("Entity");
         EntityLiving = getLegacyClass("EntityLiving");
@@ -109,7 +97,7 @@ public class LegacyNMSStorage extends NMSStorage {
             EntityArmorStand = getLegacyClass("EntityArmorStand");
         }
         if (minorVersion >= 12) {
-            ChatMessageType = getLegacyClass("ChatMessageType");
+            ChatMessageType = (Class<Enum>) getLegacyClass("ChatMessageType");
         }
 
         // DataWatcher
@@ -131,15 +119,15 @@ public class LegacyNMSStorage extends NMSStorage {
         PacketPlayOutEntityMetadata = getLegacyClass("PacketPlayOutEntityMetadata", "Packet40EntityMetadata");
         PacketPlayOutNamedEntitySpawn = getLegacyClass("PacketPlayOutNamedEntitySpawn", "Packet20NamedEntitySpawn");
         if (minorVersion >= 7) {
-            EnumEntityUseAction = getLegacyClass("PacketPlayInUseEntity$EnumEntityUseAction", "EnumEntityUseAction");
+            EnumEntityUseAction = (Class<Enum>) getLegacyClass("PacketPlayInUseEntity$EnumEntityUseAction", "EnumEntityUseAction");
         }
 
         // Player Info
         if (minorVersion >= 8) {
             PacketPlayOutPlayerInfo = getLegacyClass("PacketPlayOutPlayerInfo");
-            EnumPlayerInfoAction = getLegacyClass("PacketPlayOutPlayerInfo$EnumPlayerInfoAction", "EnumPlayerInfoAction");
+            EnumPlayerInfoAction = (Class<Enum>) getLegacyClass("PacketPlayOutPlayerInfo$EnumPlayerInfoAction", "EnumPlayerInfoAction");
             PlayerInfoData = getLegacyClass("PacketPlayOutPlayerInfo$PlayerInfoData", "PlayerInfoData");
-            EnumGamemode = getLegacyClass("EnumGamemode", "WorldSettings$EnumGamemode");
+            EnumGamemode = (Class<Enum>) getLegacyClass("EnumGamemode", "WorldSettings$EnumGamemode");
         }
 
         // Scoreboard
@@ -150,15 +138,15 @@ public class LegacyNMSStorage extends NMSStorage {
         Scoreboard = getLegacyClass("Scoreboard");
         ScoreboardObjective = getLegacyClass("ScoreboardObjective");
         ScoreboardScore = getLegacyClass("ScoreboardScore");
-        IScoreboardCriteria = getLegacyClass("IScoreboardCriteria");
+        IScoreboardCriteria = getLegacyClass("IScoreboardCriteria", "IObjective"); // 1.5.1+, 1.5
         ScoreboardTeam = getLegacyClass("ScoreboardTeam");
         if (minorVersion >= 8) {
-            EnumScoreboardHealthDisplay = getLegacyClass("IScoreboardCriteria$EnumScoreboardHealthDisplay", "EnumScoreboardHealthDisplay");
-            EnumScoreboardAction = getLegacyClass("ScoreboardServer$Action", "PacketPlayOutScoreboardScore$EnumScoreboardAction", "EnumScoreboardAction");
-            EnumNameTagVisibility = getLegacyClass("ScoreboardTeamBase$EnumNameTagVisibility", "EnumNameTagVisibility");
+            EnumScoreboardHealthDisplay = (Class<Enum>) getLegacyClass("IScoreboardCriteria$EnumScoreboardHealthDisplay", "EnumScoreboardHealthDisplay");
+            EnumScoreboardAction = (Class<Enum>) getLegacyClass("ScoreboardServer$Action", "PacketPlayOutScoreboardScore$EnumScoreboardAction", "EnumScoreboardAction");
+            EnumNameTagVisibility = (Class<Enum>) getLegacyClass("ScoreboardTeamBase$EnumNameTagVisibility", "EnumNameTagVisibility");
         }
         if (minorVersion >= 9) {
-            EnumTeamPush = getLegacyClass("ScoreboardTeamBase$EnumTeamPush");
+            EnumTeamPush = (Class<Enum>) getLegacyClass("ScoreboardTeamBase$EnumTeamPush");
         }
     }
 }

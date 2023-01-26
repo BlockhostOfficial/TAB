@@ -3,8 +3,6 @@ package me.neznamy.tab.shared.placeholders.conditions;
 import java.util.*;
 import java.util.function.Function;
 
-import com.google.common.collect.Lists;
-
 import me.neznamy.tab.api.TabPlayer;
 import me.neznamy.tab.api.placeholder.Placeholder;
 import me.neznamy.tab.shared.TAB;
@@ -58,10 +56,15 @@ public class Condition {
      */
     private int refresh = -1;
 
+    /** List of all placeholders used inside this condition */
+    private final List<String> placeholdersInConditions = new ArrayList<>();
+
     /**
      * Constructs new instance with given parameters and registers
      * this condition to list as well as the placeholder.
      *
+     * @param   type
+     *          type of condition, {@code true} for AND type and {@code false} for OR type
      * @param   name
      *          name of condition
      * @param   conditions
@@ -90,9 +93,7 @@ public class Condition {
             }
         }
         subConditions = list.toArray(new SimpleCondition[0]);
-        //adding placeholders in conditions to the map, so they are actually refreshed if not used anywhere else
         PlaceholderManagerImpl pm = TAB.getInstance().getPlaceholderManager();
-        List<String> placeholdersInConditions = new ArrayList<>();
         for (String subCondition : conditions) {
             if (subCondition.startsWith("permission:")) {
                 if (refresh > 1000 || refresh == -1) refresh = 1000; //permission refreshing will be done every second
@@ -102,6 +103,13 @@ public class Condition {
         }
         placeholdersInConditions.addAll(pm.detectPlaceholders(yes));
         placeholdersInConditions.addAll(pm.detectPlaceholders(no));
+        registeredConditions.put(name, this);
+    }
+
+    /**
+     * Configures refresh interval and registers nested placeholders
+     */
+    public void finishSetup() {
         for (String placeholder : placeholdersInConditions) {
             TAB.getInstance().getPlaceholderManager().getPlaceholder(placeholder).addParent(TabConstants.Placeholder.condition(name));
             Placeholder pl = TAB.getInstance().getPlaceholderManager().getPlaceholder(placeholder);
@@ -109,8 +117,7 @@ public class Condition {
                 refresh = pl.getRefresh();
             }
         }
-        pm.addUsedPlaceholders(placeholdersInConditions);
-        registeredConditions.put(name, this);
+        TAB.getInstance().getPlaceholderManager().addUsedPlaceholders(placeholdersInConditions);
     }
 
     /**
@@ -177,7 +184,17 @@ public class Condition {
         if (registeredConditions.containsKey(string)) {
             return registeredConditions.get(string);
         } else {
-            Condition c = new Condition(true, "AnonymousCondition[" + string + "]", Lists.newArrayList(string.split(";")), "true", "false");
+            boolean type;
+            List<String> conditions;
+            if (string.contains(";")) {
+                type = true;
+                conditions = Arrays.asList(string.split(";"));
+            } else {
+                type = false;
+                conditions = Arrays.asList(string.split("\\|"));
+            }
+            Condition c = new Condition(type, "AnonymousCondition[" + string + "]", conditions, "true", "false");
+            c.finishSetup();
             TAB.getInstance().getPlaceholderManager().registerPlayerPlaceholder(TabConstants.Placeholder.condition(c.getName()), c.getRefresh(), c::getText);
             return c;
         }
@@ -197,5 +214,14 @@ public class Condition {
      */
     public static Map<String, Function<String, SimpleCondition>> getConditionTypes() {
         return conditionTypes;
+    }
+
+    /**
+     * Marks all placeholders used in the condition as used and registers them.
+     * Using a separate method to avoid premature registration of nested conditional placeholders
+     * before they are registered properly.
+     */
+    public static void finishSetups() {
+        registeredConditions.values().forEach(Condition::finishSetup);
     }
 }

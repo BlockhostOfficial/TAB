@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import me.neznamy.tab.api.util.Preconditions;
-import me.neznamy.tab.platforms.bukkit.nms.NMSStorage;
+import me.neznamy.tab.platforms.bukkit.nms.storage.NMSStorage;
 
 /**
  * A class representing the n.m.s.DataWatcher class to make work with it much easier
@@ -85,6 +85,7 @@ public class DataWatcher {
                 position = item.getType().getPosition();
             }
             nms.DataWatcher_REGISTER.invoke(nmsWatcher, position, item.getValue());
+            if (nms.is1_19_3Plus()) nms.DataWatcher_markDirty.invoke(nmsWatcher, position);
         }
         return nmsWatcher;
     }
@@ -110,5 +111,10 @@ public class DataWatcher {
             }
         }
         return watcher;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("DataWatcher{values=%s}", dataValues);
     }
 }

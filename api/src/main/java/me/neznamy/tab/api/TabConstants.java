@@ -83,6 +83,8 @@ public class TabConstants {
         public static final String NAMETAGS_TEAM_UNREGISTER = "NameTags (Team unregister)";
         public static final String NAMETAGS_TEAM_UPDATE = "NameTags (Team update)";
 
+        public static final String SORTING_CHANGING_TEAM_NAME = "Sorting (Changing team name)";
+
         public static final String SCOREBOARD_TITLE = "Scoreboard (Title)";
         public static final String SCOREBOARD_LINES = "Scoreboard (Lines)";
 
@@ -333,12 +335,19 @@ public class TabConstants {
         public static final String VAULT_SUFFIX = "%vault-suffix%";
         public static final String HEALTH = "%health%";
 
+        public static final int MINIMUM_REFRESH_INTERVAL = 50;
+
+
         public static String condition(String name) {
             return "%condition:" + name + "%";
         }
 
         public static String animation(String name) {
             return "%animation:" + name + "%";
+        }
+
+        public static String globalPlayerListGroup(String group) {
+            return "%playerlist-group_" + group + "%";
         }
     }
 

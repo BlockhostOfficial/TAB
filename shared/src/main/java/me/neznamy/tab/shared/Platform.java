@@ -1,6 +1,5 @@
 package me.neznamy.tab.shared;
 
-import me.neznamy.tab.api.TabPlayer;
 import me.neznamy.tab.api.chat.EnumChatFormat;
 import me.neznamy.tab.api.protocol.PacketBuilder;
 import me.neznamy.tab.shared.permission.PermissionPlugin;
@@ -23,22 +22,6 @@ public abstract class Platform {
      */
     protected Platform(PacketBuilder packetBuilder) {
         this.packetBuilder = packetBuilder;
-    }
-
-    /**
-     * Calls platform-specific load event.
-     * This method is called when plugin is fully enabled.
-     */
-    public void callLoadEvent(){
-        //do nothing by default, old event system will be removed
-    }
-
-    /**
-     * Calls platform-specific player load event.
-     * This method is called when player is fully loaded.
-     */
-    public void callLoadEvent(TabPlayer player){
-        //do nothing by default, old event system will be removed
     }
 
     /**
@@ -89,12 +72,4 @@ public abstract class Platform {
      * @return  Version string if plugin is installed, {@code null} if not
      */
     public abstract String getPluginVersion(String plugin);
-
-    /**
-     * Returns name of default config file for this platform
-     * as it appears in the final jar in root directory.
-     *
-     * @return  name of default config file for this platform
-     */
-    public abstract String getConfigName();
 }

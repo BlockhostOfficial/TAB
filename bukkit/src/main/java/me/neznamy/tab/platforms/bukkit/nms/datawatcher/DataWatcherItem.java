@@ -2,7 +2,7 @@ package me.neznamy.tab.platforms.bukkit.nms.datawatcher;
 
 import me.neznamy.tab.api.TabAPI;
 import me.neznamy.tab.api.util.Preconditions;
-import me.neznamy.tab.platforms.bukkit.nms.NMSStorage;
+import me.neznamy.tab.platforms.bukkit.nms.storage.NMSStorage;
 
 /**
  * Class representing NMS Data Watcher Item
@@ -41,12 +41,15 @@ public class DataWatcherItem {
      */
     public static DataWatcherItem fromNMS(Object nmsItem) throws ReflectiveOperationException {
         NMSStorage nms = NMSStorage.getInstance();
+        Object value = nms.DataWatcherItem_VALUE.get(nmsItem);
+        DataWatcherObject object;
         if (TabAPI.getInstance().getServerVersion().getMinorVersion() >= 9) {
             Object nmsObject = nms.DataWatcherItem_TYPE.get(nmsItem);
-            return new DataWatcherItem(new DataWatcherObject(nms.DataWatcherObject_SLOT.getInt(nmsObject), nms.DataWatcherObject_SERIALIZER.get(nmsObject)), nms.DataWatcherItem_VALUE.get(nmsItem));
+            object = new DataWatcherObject(nms.DataWatcherObject_SLOT.getInt(nmsObject), nms.DataWatcherObject_SERIALIZER.get(nmsObject));
         } else {
-            return new DataWatcherItem(new DataWatcherObject(nms.DataWatcherItem_TYPE.getInt(nmsItem), null), nms.DataWatcherItem_VALUE.get(nmsItem));
+            object = new DataWatcherObject(nms.DataWatcherItem_TYPE.getInt(nmsItem), null);
         }
+        return new DataWatcherItem(object, value);
     }
 
     /**
@@ -63,5 +66,10 @@ public class DataWatcherItem {
      */
     public Object getValue() {
         return value;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("DataWatcherItem{type=%s,value=%s}", type, value);
     }
 }

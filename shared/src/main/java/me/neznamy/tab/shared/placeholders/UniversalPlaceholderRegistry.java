@@ -53,6 +53,9 @@ public class UniversalPlaceholderRegistry implements PlaceholderRegistry {
         if (plugin instanceof LuckPerms) {
             manager.registerPlayerPlaceholder(TabConstants.Placeholder.LUCKPERMS_PREFIX, 1000, ((LuckPerms)plugin)::getPrefix);
             manager.registerPlayerPlaceholder(TabConstants.Placeholder.LUCKPERMS_SUFFIX, 1000, ((LuckPerms)plugin)::getSuffix);
+        } else {
+            manager.registerServerPlaceholder(TabConstants.Placeholder.LUCKPERMS_PREFIX, -1, () -> "");
+            manager.registerServerPlaceholder(TabConstants.Placeholder.LUCKPERMS_SUFFIX, -1, () -> "");
         }
         for (Object s : TAB.getInstance().getConfiguration().getAnimationFile().getValues().keySet()) {
             Animation a = new Animation(s.toString(), TAB.getInstance().getConfiguration().getAnimationFile().getStringList(s + ".texts"),
@@ -76,6 +79,7 @@ public class UniversalPlaceholderRegistry implements PlaceholderRegistry {
             Condition c = new Condition(!"OR".equals(type), condition.getKey(), list, yes, no);
             manager.registerPlayerPlaceholder(TabConstants.Placeholder.condition(c.getName()), c.getRefresh(), c::getText);
         }
+        Condition.finishSetups();
     }
     
     /**

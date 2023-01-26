@@ -1,12 +1,11 @@
 package me.neznamy.tab.platforms.bukkit;
 
-import com.earth2me.essentials.Essentials;
 import com.viaversion.viaversion.api.Via;
 import me.clip.placeholderapi.PlaceholderAPI;
+import me.neznamy.tab.api.TabConstants;
 import me.neznamy.tab.api.TabPlayer;
 import me.neznamy.tab.api.chat.EnumChatFormat;
-import me.neznamy.tab.platforms.bukkit.event.TabLoadEvent;
-import me.neznamy.tab.platforms.bukkit.event.TabPlayerLoadEvent;
+import me.neznamy.tab.api.chat.rgb.RGBUtils;
 import me.neznamy.tab.platforms.bukkit.features.BukkitTabExpansion;
 import me.neznamy.tab.platforms.bukkit.features.PerWorldPlayerList;
 import me.neznamy.tab.platforms.bukkit.features.PetFix;
@@ -15,10 +14,10 @@ import me.neznamy.tab.platforms.bukkit.features.unlimitedtags.BukkitNameTagX;
 import me.neznamy.tab.platforms.bukkit.permission.Vault;
 import me.neznamy.tab.shared.Platform;
 import me.neznamy.tab.shared.TAB;
-import me.neznamy.tab.api.TabConstants;
 import me.neznamy.tab.shared.features.PlaceholderManagerImpl;
 import me.neznamy.tab.shared.features.bossbar.BossBarManagerImpl;
 import me.neznamy.tab.shared.features.nametags.NameTag;
+import me.neznamy.tab.shared.features.sorting.Sorting;
 import me.neznamy.tab.shared.permission.LuckPerms;
 import me.neznamy.tab.shared.permission.None;
 import me.neznamy.tab.shared.permission.PermissionPlugin;
@@ -43,7 +42,6 @@ public class BukkitPlatform extends Platform {
     /** Variables checking presence of other plugins to hook into */
     private final boolean placeholderAPI = Bukkit.getPluginManager().isPluginEnabled(TabConstants.Plugin.PLACEHOLDER_API);
     private boolean libsDisguises = Bukkit.getPluginManager().isPluginEnabled(TabConstants.Plugin.LIBS_DISGUISES);
-    private final Plugin essentials = Bukkit.getPluginManager().getPlugin(TabConstants.Plugin.ESSENTIALS);
     private Plugin viaVersion;
     private final boolean protocolSupport = Bukkit.getPluginManager().isPluginEnabled(TabConstants.Plugin.PROTOCOL_SUPPORT);
 
@@ -88,6 +86,7 @@ public class BukkitPlatform extends Platform {
             tab.getFeatureManager().registerFeature(TabConstants.Feature.PIPELINE_INJECTION, new BukkitPipelineInjector());
         new BukkitPlaceholderRegistry(plugin).registerPlaceholders(tab.getPlaceholderManager());
         if (tab.getConfiguration().getConfig().getBoolean("scoreboard-teams.enabled", true)) {
+            tab.getFeatureManager().registerFeature(TabConstants.Feature.SORTING, new Sorting());
             if (tab.getConfiguration().getConfig().getBoolean("scoreboard-teams.unlimited-nametag-mode.enabled", false) && tab.getServerVersion().getMinorVersion() >= 8) {
                 tab.getFeatureManager().registerFeature(TabConstants.Feature.UNLIMITED_NAME_TAGS, new BukkitNameTagX(plugin));
             } else {
@@ -182,16 +181,6 @@ public class BukkitPlatform extends Platform {
         }
     }
 
-    @Override
-    public void callLoadEvent() {
-        Bukkit.getPluginManager().callEvent(new TabLoadEvent());
-    }
-
-    @Override
-    public void callLoadEvent(TabPlayer player) {
-        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> Bukkit.getPluginManager().callEvent(new TabPlayerLoadEvent(player)));
-    }
-
     /**
      * Returns status of LibsDisguises plugin presence
      *
@@ -211,20 +200,6 @@ public class BukkitPlatform extends Platform {
      */
     public void setLibsDisguisesEnabled(boolean enabled) {
         libsDisguises = enabled;
-    }
-
-    /**
-     * Returns Essentials' main class if the plugin is installed, {@code null} if not
-     *
-     * @return  Essentials instance or {@code null} if plugin is not installed
-     */
-    public Essentials getEssentials() {
-        return (Essentials) essentials;
-    }
-
-    @Override
-    public String getConfigName() {
-        return "bukkitconfig.yml";
     }
 
     /**
@@ -298,6 +273,7 @@ public class BukkitPlatform extends Platform {
     /**
      * Sends console message using ConsoleCommandSender, due to
      * Paper not translating colors correctly in Logger messages
+     * and to allow RGB (at least on Paper, doesn't work on spigot)
      *
      * @param   message
      *          Message to send
@@ -306,6 +282,9 @@ public class BukkitPlatform extends Platform {
      */
     @Override
     public void sendConsoleMessage(String message, boolean translateColors) {
-        Bukkit.getConsoleSender().sendMessage("[TAB] " + (translateColors ? EnumChatFormat.color(message) : message));
+        Bukkit.getConsoleSender().sendMessage("[TAB] " + (translateColors ?
+                EnumChatFormat.color(RGBUtils.getInstance().convertToBukkitFormat(message,
+                        TAB.getInstance().getServerVersion().getMinorVersion() >= 16))
+                : message));
     }
 }

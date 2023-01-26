@@ -247,11 +247,11 @@ public class PlaceholderManagerImpl extends TabFeature implements PlaceholderMan
                     tabExpansion.setPlaceholderValue(all, p.getIdentifier(), p.getLastValue(all));
                 }
             }
-            if (p.getRefresh() % 50 == 0 && p.getRefresh() > 0) {
+            if (p.getRefresh() % TabConstants.Placeholder.MINIMUM_REFRESH_INTERVAL == 0 && p.getRefresh() > 0) {
                 int refresh = gcd(p.getRefresh(), refreshInterval);
                 if (refreshInterval != refresh) {
                     TAB.getInstance().debug("Decreasing refresh interval of placeholder refreshing task to " + refresh + "ms due to placeholder " + identifier);
-                    refreshTask.cancel(true);
+                    if (refreshTask != null) refreshTask.cancel(true);
                     refreshInterval = refresh;
                     refreshTask = TAB.getInstance().getCPUManager().startRepeatingMeasuredTask(refreshInterval, this, "Refreshing placeholders", this::refresh);
                     atomic.set(0);
@@ -296,9 +296,17 @@ public class PlaceholderManagerImpl extends TabFeature implements PlaceholderMan
 
     @Override
     public void onJoin(TabPlayer connectedPlayer) {
-        if (tabExpansion == null) return;
         for (Placeholder p : usedPlaceholders) {
-            if (p instanceof ServerPlaceholder) { // server placeholders don't update on join
+            if (p instanceof RelationalPlaceholderImpl) {
+                for (TabPlayer all : TAB.getInstance().getOnlinePlayers()) {
+                    ((RelationalPlaceholderImpl)p).update(connectedPlayer, all);
+                    ((RelationalPlaceholderImpl)p).update(all, connectedPlayer);
+                }
+            }
+            if (p instanceof PlayerPlaceholderImpl) {
+                ((PlayerPlaceholderImpl)p).update(connectedPlayer);
+            }
+            if (tabExpansion != null && p instanceof ServerPlaceholder) { // server placeholders don't update on join
                 tabExpansion.setPlaceholderValue(connectedPlayer, p.getIdentifier(), ((ServerPlaceholder) p).getLastValue());
             }
         }

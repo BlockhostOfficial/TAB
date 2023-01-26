@@ -1,4 +1,4 @@
-package me.neznamy.tab.platforms.bukkit.nms;
+package me.neznamy.tab.platforms.bukkit.nms.storage;
 
 import com.mojang.authlib.GameProfile;
 import io.netty.channel.Channel;
@@ -24,12 +24,15 @@ public abstract class NMSStorage {
     /** Server's minor version */
     protected final int minorVersion = Integer.parseInt(serverPackage.split("_")[1]);
 
+    /** Flag determining whether the server version is at least 1.19.3 or not */
+    private boolean is1_19_3Plus;
+
     /** Basic universal values */
     protected Class<?> Packet;
     protected Class<?> NetworkManager;
     protected Class<?> EntityArmorStand;
     protected Class<?> World;
-    public Class<?> EnumChatFormat;
+    public Class<Enum> EnumChatFormat;
     public Class<?> EntityPlayer;
     protected Class<?> EntityHuman;
     protected Class<?> Entity;
@@ -40,10 +43,10 @@ public abstract class NMSStorage {
     public Field NETWORK_MANAGER;
     public Field CHANNEL;
     public Field EntityHuman_ProfilePublicKey;
+    public Field EntityPlayer_RemoteChatSession;
     public Method getHandle;
     public Method sendPacket;
     public Method getProfile;
-    public Enum[] EnumChatFormat_values;
 
     /** Chat components */
     protected Class<?> IChatBaseComponent;
@@ -52,9 +55,8 @@ public abstract class NMSStorage {
 
     /** PacketPlayOutChat */
     protected Class<?> PacketPlayOutChat;
-    public Class<?> ChatMessageType;
+    public Class<Enum> ChatMessageType;
     public Constructor<?> newPacketPlayOutChat;
-    public Enum[] ChatMessageType_values;
 
     /** DataWatcher */
     protected Class<?> DataWatcher;
@@ -70,9 +72,16 @@ public abstract class NMSStorage {
     public Field DataWatcherObject_SERIALIZER;
     public Method DataWatcher_REGISTER;
     private final DataWatcherRegistry registry;
+    //1.19.3+
+    protected Class<?> DataWatcher$DataValue;
+    public Field DataWatcher$DataValue_POSITION;
+    public Field DataWatcher$DataValue_VALUE;
+    public Method DataWatcher_markDirty;
+    public Method DataWatcher_b;
 
     /** PacketPlayOutSpawnEntityLiving */
     public Class<?> PacketPlayOutSpawnEntityLiving;
+    public Class<?> EntityTypes;
     public Constructor<?> newPacketPlayOutSpawnEntityLiving;
     public Field PacketPlayOutSpawnEntityLiving_ENTITYID;
     public Field PacketPlayOutSpawnEntityLiving_ENTITYTYPE;
@@ -83,8 +92,7 @@ public abstract class NMSStorage {
     public Field PacketPlayOutSpawnEntityLiving_Y;
     public Field PacketPlayOutSpawnEntityLiving_Z;
     public Field PacketPlayOutSpawnEntityLiving_DATAWATCHER;
-    public Method Registry_a;
-    public Object IRegistry_X;
+    public Object EntityTypes_ARMOR_STAND;
 
     /** PacketPlayOutEntityTeleport */
     public Class<?> PacketPlayOutEntityTeleport;
@@ -105,7 +113,7 @@ public abstract class NMSStorage {
     /** Other entity packets */
     public Class<?> PacketPlayInUseEntity;
     public Class<?> PacketPlayInUseEntity$d;
-    protected Class<?> EnumEntityUseAction;
+    protected Class<Enum> EnumEntityUseAction;
     public Field PacketPlayInUseEntity_ENTITY;
     public Field PacketPlayInUseEntity_ACTION;
 
@@ -127,9 +135,9 @@ public abstract class NMSStorage {
 
     /** PacketPlayOutPlayerInfo */
     public Class<?> PacketPlayOutPlayerInfo;
-    protected Class<?> EnumPlayerInfoAction;
+    public Class<Enum> EnumPlayerInfoAction;
     protected Class<?> PlayerInfoData;
-    protected Class<?> EnumGamemode;
+    public Class<Enum> EnumGamemode;
     protected Class<?> ProfilePublicKey;
     protected Class<?> ProfilePublicKey$a;
     public Constructor<?> newPacketPlayOutPlayerInfo;
@@ -137,13 +145,25 @@ public abstract class NMSStorage {
     public Field PacketPlayOutPlayerInfo_ACTION;
     public Field PacketPlayOutPlayerInfo_PLAYERS;
     public Method PlayerInfoData_getProfile;
+    public Method PlayerInfoData_isListed;
     public Method PlayerInfoData_getLatency;
     public Method PlayerInfoData_getGamemode;
     public Method PlayerInfoData_getDisplayName;
     public Method PlayerInfoData_getProfilePublicKeyRecord;
     public Method ProfilePublicKey_getRecord;
-    public Enum[] EnumPlayerInfoAction_values;
-    public Enum[] EnumGamemode_values;
+    //1.19.3+
+    public Class<?> ClientboundPlayerInfoRemovePacket;
+    public Class<?> RemoteChatSession;
+    public Class<?> RemoteChatSession$Data;
+    public Constructor<?> newClientboundPlayerInfoRemovePacket;
+    public Constructor<?> newRemoteChatSession;
+    public Constructor<?> newRemoteChatSession$Data;
+    public Method ClientboundPlayerInfoRemovePacket_getEntries;
+    public Method RemoteChatSession_getSessionId;
+    public Method RemoteChatSession_getProfilePublicKey;
+    public Method RemoteChatSession$Data_getSessionId;
+    public Method RemoteChatSession$Data_getProfilePublicKey;
+
 
     /** Scoreboard objectives */
     public Class<?> PacketPlayOutScoreboardDisplayObjective;
@@ -153,8 +173,8 @@ public abstract class NMSStorage {
     protected Class<?> ScoreboardObjective;
     protected Class<?> ScoreboardScore;
     protected Class<?> IScoreboardCriteria;
-    public Class<?> EnumScoreboardHealthDisplay;
-    protected Class<?> EnumScoreboardAction;
+    public Class<Enum> EnumScoreboardHealthDisplay;
+    public Class<Enum> EnumScoreboardAction;
     public Constructor<?> newScoreboardObjective;
     protected Constructor<?> newScoreboard;
     public Constructor<?> newScoreboardScore;
@@ -171,15 +191,13 @@ public abstract class NMSStorage {
     public Field PacketPlayOutScoreboardObjective_RENDERTYPE;
     public Field PacketPlayOutScoreboardObjective_DISPLAYNAME;
     public Method ScoreboardScore_setScore;
-    public Enum[] EnumScoreboardHealthDisplay_values;
-    public Enum[] EnumScoreboardAction_values;
 
     /** PacketPlayOutScoreboardTeam */
     public Class<?> PacketPlayOutScoreboardTeam;
     protected Class<?> ScoreboardTeam;
-    protected Class<?> EnumNameTagVisibility;
-    protected Class<?> EnumTeamPush;
-    protected Class<?> PacketPlayOutScoreboardTeam_PlayerAction;
+    public Class<Enum> EnumNameTagVisibility;
+    public Class<Enum> EnumTeamPush;
+    public Class<Enum> PacketPlayOutScoreboardTeam_PlayerAction;
     public Constructor<?> newScoreboardTeam;
     public Constructor<?> newPacketPlayOutScoreboardTeam;
     public Field PacketPlayOutScoreboardTeam_NAME;
@@ -196,9 +214,6 @@ public abstract class NMSStorage {
     public Method PacketPlayOutScoreboardTeam_of;
     public Method PacketPlayOutScoreboardTeam_ofBoolean;
     public Method PacketPlayOutScoreboardTeam_ofString;
-    public Enum[] EnumNameTagVisibility_values;
-    public Enum[] EnumTeamPush_values;
-    public Enum[] PacketPlayOutScoreboardTeam_PlayerAction_values;
 
     /** Other */
     public Object emptyScoreboard;
@@ -211,6 +226,10 @@ public abstract class NMSStorage {
      *          If some field, constructor or method was not found
      */
     public NMSStorage() throws ReflectiveOperationException {
+        try {
+            Class.forName("net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket");
+            is1_19_3Plus = true;
+        } catch (ClassNotFoundException | NullPointerException ignored) {}
         ProtocolVersion.UNKNOWN_SERVER_VERSION.setMinorVersion(minorVersion); //fixing compatibility with forks that set version field value to "Unknown"
         loadClasses();
         if (minorVersion >= 7) {
@@ -226,7 +245,6 @@ public abstract class NMSStorage {
         PLAYER_CONNECTION = getFields(EntityPlayer, PlayerConnection).get(0);
         getHandle = Class.forName("org.bukkit.craftbukkit." + serverPackage + ".entity.CraftPlayer").getMethod("getHandle");
         sendPacket = getMethods(PlayerConnection, void.class, Packet).get(0);
-        EnumChatFormat_values = getEnumValues(EnumChatFormat);
         registry = new DataWatcherRegistry(this);
         dataWatcher();
         entityTeleport();
@@ -266,9 +284,6 @@ public abstract class NMSStorage {
      *          If some method, field or constructor was not found
      */
     protected void chat() throws ReflectiveOperationException {
-        if (minorVersion >= 12 && minorVersion <= 18) {
-            ChatMessageType_values = getEnumValues(ChatMessageType);
-        }
         if (minorVersion >= 19) {
             try {
                 newPacketPlayOutChat = PacketPlayOutChat.getConstructor(IChatBaseComponent, boolean.class);
@@ -295,20 +310,36 @@ public abstract class NMSStorage {
      */
     protected void playerInfo() throws ReflectiveOperationException {
         if (minorVersion < 8) return;
-        newPacketPlayOutPlayerInfo = PacketPlayOutPlayerInfo.getConstructor(EnumPlayerInfoAction, Array.newInstance(EntityPlayer, 0).getClass());
+        if (is1_19_3Plus()) {
+            newClientboundPlayerInfoRemovePacket = ClientboundPlayerInfoRemovePacket.getConstructor(List.class);
+            newPacketPlayOutPlayerInfo = PacketPlayOutPlayerInfo.getConstructor(EnumSet.class, Collection.class);
+            ClientboundPlayerInfoRemovePacket_getEntries = getMethods(ClientboundPlayerInfoRemovePacket, List.class).get(0);
+            PacketPlayOutPlayerInfo_ACTION = getFields(PacketPlayOutPlayerInfo, EnumSet.class).get(0);
+            newRemoteChatSession$Data = RemoteChatSession$Data.getConstructor(UUID.class, ProfilePublicKey$a);
+            RemoteChatSession$Data_getSessionId = getMethods(RemoteChatSession$Data, UUID.class).get(0);
+            RemoteChatSession$Data_getProfilePublicKey = getMethods(RemoteChatSession$Data, ProfilePublicKey$a).get(0);
+            PlayerInfoData_getProfilePublicKeyRecord = getMethods(PlayerInfoData, RemoteChatSession$Data).get(0);
+            EntityPlayer_RemoteChatSession = getFields(EntityPlayer, RemoteChatSession).get(0);
+            PlayerInfoData_isListed = getMethods(PlayerInfoData, boolean.class).get(0);
+        } else {
+            newPacketPlayOutPlayerInfo = PacketPlayOutPlayerInfo.getConstructor(EnumPlayerInfoAction, Array.newInstance(EntityPlayer, 0).getClass());
+            PacketPlayOutPlayerInfo_ACTION = getFields(PacketPlayOutPlayerInfo, EnumPlayerInfoAction).get(0);
+            if (minorVersion >= 19) {
+                PlayerInfoData_getProfilePublicKeyRecord = getMethods(PlayerInfoData, ProfilePublicKey$a).get(0);
+                EntityHuman_ProfilePublicKey = getFields(EntityHuman, ProfilePublicKey).get(0);
+            }
+        }
         newPlayerInfoData = PlayerInfoData.getConstructors()[0];
-        PacketPlayOutPlayerInfo_ACTION = getFields(PacketPlayOutPlayerInfo, EnumPlayerInfoAction).get(0);
         PacketPlayOutPlayerInfo_PLAYERS = getFields(PacketPlayOutPlayerInfo, List.class).get(0);
         PlayerInfoData_getProfile = getMethods(PlayerInfoData, GameProfile.class).get(0);
-        PlayerInfoData_getLatency = getMethods(PlayerInfoData, int.class).get(0);
+        for (Method m: getMethods(PlayerInfoData, int.class)) {
+            // do not take .hashCode(), which is final
+            if (!Modifier.isFinal(m.getModifiers())) PlayerInfoData_getLatency = m;
+        }
         PlayerInfoData_getGamemode = getMethods(PlayerInfoData, EnumGamemode).get(0);
         PlayerInfoData_getDisplayName = getMethods(PlayerInfoData, IChatBaseComponent).get(0);
-        EnumPlayerInfoAction_values = getEnumValues(EnumPlayerInfoAction);
-        EnumGamemode_values = getEnumValues(EnumGamemode);
         if (minorVersion >= 19) {
-            EntityHuman_ProfilePublicKey = getFields(EntityHuman, ProfilePublicKey).get(0);
             ProfilePublicKey_getRecord = getMethods(ProfilePublicKey, ProfilePublicKey$a).get(0);
-            PlayerInfoData_getProfilePublicKeyRecord = getMethods(PlayerInfoData, ProfilePublicKey$a).get(0);
         }
     }
 
@@ -320,7 +351,11 @@ public abstract class NMSStorage {
      */
     protected void spawnEntityLiving() throws ReflectiveOperationException {
         if (minorVersion >= 17) {
-            newPacketPlayOutSpawnEntityLiving = PacketPlayOutSpawnEntityLiving.getConstructor(EntityLiving);
+            if (is1_19_3Plus()) {
+                newPacketPlayOutSpawnEntityLiving = PacketPlayOutSpawnEntityLiving.getConstructor(Entity);
+            } else {
+                newPacketPlayOutSpawnEntityLiving = PacketPlayOutSpawnEntityLiving.getConstructor(EntityLiving);
+            }
         } else {
             newPacketPlayOutSpawnEntityLiving = PacketPlayOutSpawnEntityLiving.getConstructor();
         }
@@ -403,7 +438,11 @@ public abstract class NMSStorage {
     protected void otherEntity() throws ReflectiveOperationException {
         PacketPlayOutEntity_ENTITYID = getFields(PacketPlayOutEntity, int.class).get(0);
         PacketPlayOutEntityDestroy_ENTITIES = setAccessible(PacketPlayOutEntityDestroy.getDeclaredFields()[0]);
-        newPacketPlayOutEntityMetadata = PacketPlayOutEntityMetadata.getConstructor(int.class, DataWatcher, boolean.class);
+        if (is1_19_3Plus()) {
+            newPacketPlayOutEntityMetadata = PacketPlayOutEntityMetadata.getConstructor(int.class, List.class);
+        } else {
+            newPacketPlayOutEntityMetadata = PacketPlayOutEntityMetadata.getConstructor(int.class, DataWatcher, boolean.class);
+        }
         PacketPlayOutEntityMetadata_LIST = getFields(PacketPlayOutEntityMetadata, List.class).get(0);
         PacketPlayOutNamedEntitySpawn_ENTITYID = getFields(PacketPlayOutNamedEntitySpawn, int.class).get(0);
         if (minorVersion >= 7) {
@@ -432,6 +471,11 @@ public abstract class NMSStorage {
             DataWatcherItem_TYPE = getFields(DataWatcherItem, DataWatcherObject).get(0);
             DataWatcherObject_SLOT = getFields(DataWatcherObject, int.class).get(0);
             DataWatcherObject_SERIALIZER = getFields(DataWatcherObject, DataWatcherSerializer).get(0);
+            if (is1_19_3Plus()) {
+                DataWatcher$DataValue_POSITION = getFields(DataWatcher$DataValue, int.class).get(0);
+                DataWatcher$DataValue_VALUE = getFields(DataWatcher$DataValue, Object.class).get(0);
+                DataWatcher_markDirty = getMethods(DataWatcher, void.class, DataWatcherObject).get(0);
+            }
         } else {
             DataWatcherItem_TYPE = getFields(DataWatcherItem, int.class).get(1);
         }
@@ -456,8 +500,6 @@ public abstract class NMSStorage {
         List<Field> list = getFields(PacketPlayOutScoreboardObjective, int.class);
         PacketPlayOutScoreboardObjective_METHOD = list.get(list.size()-1);
         if (minorVersion >= 8) {
-            EnumScoreboardHealthDisplay_values = getEnumValues(EnumScoreboardHealthDisplay);
-            EnumScoreboardAction_values = getEnumValues(EnumScoreboardAction);
             PacketPlayOutScoreboardObjective_RENDERTYPE = getFields(PacketPlayOutScoreboardObjective, EnumScoreboardHealthDisplay).get(0);
         }
         if (minorVersion >= 13) {
@@ -488,11 +530,7 @@ public abstract class NMSStorage {
         PacketPlayOutScoreboardTeam_ACTION = getInstanceFields(PacketPlayOutScoreboardTeam, int.class).get(0);
         PacketPlayOutScoreboardTeam_PLAYERS = getFields(PacketPlayOutScoreboardTeam, Collection.class).get(0);
         ScoreboardTeam_getPlayerNameSet = getMethods(ScoreboardTeam, Collection.class).get(0);
-        if (minorVersion >= 8) {
-            EnumNameTagVisibility_values = getEnumValues(EnumNameTagVisibility);
-        }
         if (minorVersion >= 9) {
-            EnumTeamPush_values = getEnumValues(EnumTeamPush);
             ScoreboardTeam_setCollisionRule = getMethods(ScoreboardTeam, void.class, EnumTeamPush).get(0);
         }
         if (minorVersion >= 13) {
@@ -502,7 +540,6 @@ public abstract class NMSStorage {
             PacketPlayOutScoreboardTeam_of = getMethods(PacketPlayOutScoreboardTeam, PacketPlayOutScoreboardTeam, ScoreboardTeam).get(0);
             PacketPlayOutScoreboardTeam_ofBoolean = getMethods(PacketPlayOutScoreboardTeam, PacketPlayOutScoreboardTeam, ScoreboardTeam, boolean.class).get(0);
             PacketPlayOutScoreboardTeam_ofString = getMethods(PacketPlayOutScoreboardTeam, PacketPlayOutScoreboardTeam, ScoreboardTeam, String.class, PacketPlayOutScoreboardTeam_PlayerAction).get(0);
-            PacketPlayOutScoreboardTeam_PlayerAction_values = getEnumValues(PacketPlayOutScoreboardTeam_PlayerAction);
         } else {
             newPacketPlayOutScoreboardTeam = PacketPlayOutScoreboardTeam.getConstructor(ScoreboardTeam, int.class);
         }
@@ -541,7 +578,7 @@ public abstract class NMSStorage {
     protected Method getMethod(Class<?> clazz, String[] names, Class<?>... parameterTypes) throws NoSuchMethodException {
         for (String name : names) {
             try {
-                return getMethod(clazz, name, parameterTypes);
+                return clazz.getMethod(name, parameterTypes);
             } catch (NoSuchMethodException e) {
                 //not the first method in array
             }
@@ -561,39 +598,6 @@ public abstract class NMSStorage {
         }
         throw new NoSuchMethodException("No method found with possible names " + Arrays.toString(names) + " with parameters " +
                 Arrays.toString(parameterTypes) + " in class " + clazz.getName() + ". Methods with matching parameters: " + list);
-    }
-
-    /**
-     * Returns Method from class with given name and parameter types. This should be equal to
-     * simply calling Class#getMethod, which however does not work with a few specific methods on
-     * CatServer fork. This workaround works for them.
-     *
-     * @param   clazz
-     *          Class to get method from
-     * @param   name
-     *          Name of the method
-     * @param   parameterTypes
-     *          Parameter types of the method
-     * @return  Method with specified name and parameter types
-     * @throws  NoSuchMethodException
-     *          If no such method was found
-     */
-    protected Method getMethod(Class<?> clazz, String name, Class<?>... parameterTypes) throws NoSuchMethodException {
-        List<Method> list = new ArrayList<>();
-        for (Method m : clazz.getMethods()) {
-            if (!m.getName().equals(name) || m.getParameterCount() != parameterTypes.length) continue;
-            Class<?>[] types = m.getParameterTypes();
-            boolean valid = true;
-            for (int i=0; i<types.length; i++) {
-                if (types[i] != parameterTypes[i]) {
-                    valid = false;
-                    break;
-                }
-            }
-            if (valid) list.add(m);
-        }
-        if (!list.isEmpty()) return list.get(0);
-        throw new NoSuchMethodException("No method found with name " + name + " in class " + clazz.getName() + " with parameters " + Arrays.toString(parameterTypes));
     }
 
     /**
@@ -683,46 +687,6 @@ public abstract class NMSStorage {
     }
 
     /**
-     * Returns field from class with specified possible names of the field.
-     * Names are checked in specified order and first match is returned.
-     * If no match is found, {@link NoSuchFieldException} is thrown.
-     *
-     * @param   clazz
-     *          Class to get field from
-     * @param   potentialNames
-     *          Potential names of the field
-     * @return  Field with specified name
-     * @throws  NoSuchFieldException
-     *          If no match is found
-     */
-    protected Field getField(Class<?> clazz, String... potentialNames) throws NoSuchFieldException {
-        for (String name : potentialNames) {
-            try {
-                return getField(clazz, name);
-            } catch (NoSuchFieldException e) {
-                //not the first field name from array
-            }
-        }
-        throw new NoSuchFieldException("No field found in class " + clazz.getName() + " with potential names " + Arrays.toString(potentialNames));
-    }
-
-    /**
-     * Returns all Enum values of specified class
-     *
-     * @param   enumClass
-     *          Class to get values of
-     * @return  Array of all values of the enum class
-     */
-    protected Enum[] getEnumValues(Class<?> enumClass) {
-        if (!enumClass.isEnum()) throw new IllegalArgumentException(enumClass.getName() + " is not an enum class");
-        try {
-            return (Enum[]) enumClass.getMethod("values").invoke(null);
-        } catch (ReflectiveOperationException ignored) {
-            return new Enum[0]; // this will never happen
-        }
-    }
-
-    /**
      * Returns server's minor version
      * @return  server's minor version
      */
@@ -786,5 +750,9 @@ public abstract class NMSStorage {
             }
         }
         return fields;
+    }
+
+    public boolean is1_19_3Plus() {
+        return is1_19_3Plus;
     }
 }
